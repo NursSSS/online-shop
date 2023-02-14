@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from 'src/user/user.module';
@@ -11,7 +12,8 @@ import { AuthService } from './auth.service';
       signOptions : {
         expiresIn: '30d'
     }
-  })],
+  }),
+  HttpModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [JwtModule]

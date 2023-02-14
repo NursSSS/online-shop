@@ -1,6 +1,11 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RoleGuard } from 'src/auth/guard/role-guard';
+import { Role } from './enum/role-decorator';
+import { UserRole } from './enum/role.enum';
 import { UserService } from './user.service';
+import { ApiOkResponse, ApiForbiddenResponse } from '@nestjs/swagger/dist';
+import { UserEntity } from './entity/user.entity';
 
 @Controller('user')
 export class UserController {
@@ -9,6 +14,10 @@ export class UserController {
     ){}
 
     @Get()
+    @ApiOkResponse({ type: UserEntity })
+    @ApiForbiddenResponse({ description: 'No access' })
+    @Role(UserRole.ADMIN)
+    @UseGuards(RoleGuard)
     @UseGuards(JwtAuthGuard)
     async findAll(){
         return await this.UserService.findAll()

@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios/dist';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import axios from 'axios';
 import { Response } from 'express';
 import { CreateUserDto } from 'src/user/dto';
 import { UserService } from 'src/user/user.service'
@@ -19,16 +20,17 @@ export class AuthService {
     async signin(dto: CreateUserDto, res: Response){
         const user = await this.UserService.findByNumber(dto.phoneNumber)
 
-        if(user){
-            throw new BadRequestException('User with this number already exist')
-        }
+        // if(user){
+        //     throw new BadRequestException('User with this number already exist')
+        // }
 
 
         const code = await this.sendMessage(dto.phoneNumber, res)
 
-        // dto.code = code
+        dto.code = code
 
-        return await this.UserService.create(dto)
+        const saved = await this.UserService.create(dto)
+        res.send(saved)
     }
 
     async login(phoneNumber: string, res: Response){
@@ -39,45 +41,40 @@ export class AuthService {
         }
 
         const code = await this.sendMessage(phoneNumber, res)
-        // user.code = code
+        user.code = code
 
-        return await this.UserService.update(user)
+        const saved = await this.UserService.update(user)
+        res.send(saved)
     }
 
     private async sendMessage(phoneNumber: string, res: Response){
         const randomstring = require("randomstring")
-        const xml = require('xml')
 
         const code = await randomstring.generate({
             length: 6,
             charset: 'numeric'
         })
-        const message = {
-            message: [
-                {login: 'nurik_kun'},
-                {pwd: 'hQ_Vrv55'},
-                {id: code},
-                {sender: 'MissDress'},
-                {text: `Your verification code is: ${code}`},
-                {phones: {
-                    phone: phoneNumber
-                }}
-            ]
-        }
 
         const config = {
             headers: {
               'Content-Type': 'text/xml',
             },
           };
+        const response = await axios.post('http://smspro.nikita.kg/api/message', `<?xml version="1.0" encoding="UTF-8"?>
+        <message>
+        <login>nurik_kun</login>
+        <pwd>hQ_Vrv55</pwd>
+        <id>${code}</id>
+        <sender>SMSPRO.KG</sender>
+        <text>Your verification code is: ${code}</text>
+        <phones>
+        <phone>${phoneNumber}</phone>
+        </phones>
+        </message>`, config)
 
-        const body = xml(message)
-        console.log(body)
-        const response =  this.HttpService.post('http://smspro.nikita.kg/api/message', body, config)
-        console.log(response)
-
-        return response
+        return code
     }
+
 
 
     async validate(dto: ValidateDto){
@@ -111,8 +108,9 @@ export class AuthService {
 
         const code = await this.sendMessage(number, res)
 
-        // user.code = code
+        user.code = code
 
-        return await this.UserService.update(user)
+        const saved = await this.UserService.update(user)
+        res.send(saved)
     }
 }

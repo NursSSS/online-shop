@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { UserRole } from "../enum/role.enum";
 import { IUser } from "../interface/user.interface";
 
 @Entity()
@@ -17,4 +18,7 @@ export class UserEntity implements IUser{
 
     @Column()
     code: number
+
+    // @Column({ type: 'enum')
+    // role: UserRole
 }

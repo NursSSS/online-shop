@@ -1,5 +1,7 @@
+import { HttpService } from '@nestjs/axios/dist';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Response } from 'express';
 import { CreateUserDto } from 'src/user/dto';
 import { UserService } from 'src/user/user.service'
 import { GenerateToken, ValidateDto } from './dto';
@@ -11,9 +13,10 @@ export class AuthService {
     constructor(
         private UserService: UserService,
         private JwtService: JwtService,
+        private HttpService: HttpService
     ){}
 
-    async signin(dto: CreateUserDto){
+    async signin(dto: CreateUserDto, res: Response){
         const user = await this.UserService.findByNumber(dto.phoneNumber)
 
         if(user){
@@ -21,50 +24,61 @@ export class AuthService {
         }
 
 
-        const code = await this.sendMessage(dto.phoneNumber)
+        const code = await this.sendMessage(dto.phoneNumber, res)
 
-        dto.code = code
+        // dto.code = code
 
         return await this.UserService.create(dto)
     }
 
-    async login(phoneNumber: string){
+    async login(phoneNumber: string, res: Response){
         const user = await this.UserService.findByNumber(phoneNumber)
-        console.log(user)
-        if(!user){
-            throw new BadRequestException('Wrong number')
-        }
-        console.log('a')
 
-        const code = await this.sendMessage(phoneNumber)
-        user.code = code
+        if(!user){
+            throw new NotFoundException('User is not found')
+        }
+
+        const code = await this.sendMessage(phoneNumber, res)
+        // user.code = code
 
         return await this.UserService.update(user)
     }
 
-    private async sendMessage(phoneNumber: string){
+    private async sendMessage(phoneNumber: string, res: Response){
         const randomstring = require("randomstring")
-        const { Vonage } = require('@vonage/server-sdk')
+        const xml = require('xml')
 
         const code = await randomstring.generate({
             length: 6,
             charset: 'numeric'
         })
+        const message = {
+            message: [
+                {login: 'nurik_kun'},
+                {pwd: 'hQ_Vrv55'},
+                {id: code},
+                {sender: 'MissDress'},
+                {text: `Your verification code is: ${code}`},
+                {phones: {
+                    phone: phoneNumber
+                }}
+            ]
+        }
 
-        const vonageAPI = new Vonage({
-            apiKey: process.env.API_KEY,
-            apiSecret: process.env.API_SECRET
-        })
+        const config = {
+            headers: {
+              'Content-Type': 'text/xml',
+            },
+          };
 
-        const from = "MissDress"
-        const to = phoneNumber
-        const text = `Your veridication code is: ${code}`
+        const body = xml(message)
+        console.log(body)
+        const response =  this.HttpService.post('http://smspro.nikita.kg/api/message', body, config)
+        console.log(response)
 
-        await vonageAPI.sms.send({to, from, text})
-            .catch(err => { throw new BadRequestException('Wrong number') });
-        
-        return code
+        return response
     }
+
 
     async validate(dto: ValidateDto){
         const user = await this.UserService.findById(dto.user_id)
@@ -88,16 +102,16 @@ export class AuthService {
         return { token: await this.JwtService.signAsync(payLoad) }
     }
 
-    async changeNumber(number: string){
+    async changeNumber(number: string, res: Response){
         const user = await this.UserService.findByNumber(number)
 
         if(user){
             throw new BadRequestException('User with this number already exist')
         }
 
-        const code = await this.sendMessage(number)
+        const code = await this.sendMessage(number, res)
 
-        user.code = code
+        // user.code = code
 
         return await this.UserService.update(user)
     }

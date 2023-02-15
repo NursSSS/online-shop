@@ -9,8 +9,8 @@ export class UpdateProductDto {
     quantity: number
     code: string
     size: string
-    image?: string
-    color: [ProductColor]
+    image?: string[]
+    color: ProductColor[]
     collection: ProductCollection
     category: ProductCategory
 }

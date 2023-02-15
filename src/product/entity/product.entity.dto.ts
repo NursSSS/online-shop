@@ -28,14 +28,11 @@ export class ProductEntity implements IProduct {
     @Column()
     size: string
 
+    @Column('text', { array: true })
+    image: string[]
+
     @Column()
-    image: string
-
-    @Column({ default: 0 })
-    rating_sum: number
-
-    @Column({ default: 0 })
-    rating_count: number
+    rating: number
 
     @Column({ type: 'enum', enum: ProductColor, array: true })
     color: ProductColor[]

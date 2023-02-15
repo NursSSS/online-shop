@@ -8,7 +8,7 @@ export class CreateProductDto {
     quantity: number
     code: string
     size: string
-    image?: string
+    image?: string[]
     color: [ProductColor]
     collection: ProductCollection
     category: ProductCategory

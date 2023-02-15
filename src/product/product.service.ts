@@ -5,15 +5,7 @@ import { Repository } from 'typeorm';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductEntity } from './entity/product.entity.dto';
 import { ProductCategory, ProductCollection } from './enum';
-let EasyYandexS3 = require('easy-yandex-s3').default;
 
-const s3API = new EasyYandexS3({
-    auth: {
-        accessKeyId: process.env.ACCESS_KEY_ID,
-        secretAccessKey: process.env.SECRET_ACCESS_KEY,
-    },
-    Bucket: process.env.BUCKET_NAME,
-})
 
 
 
@@ -48,19 +40,39 @@ export class ProductService {
         return product
     }
 
-    // async create(dto: CreateProductDto, file: Express.Multer.File){
-    async create(dto: CreateProductDto){
+    async create(dto: CreateProductDto, files: Array<Express.Multer.File>){
         const product = await this.findByCode(dto.code)
-
         
         if(product){
             throw new BadRequestException('Product with this atricul already exist')
         }
+
+        let EasyYandexS3 = require('easy-yandex-s3').default;
+        let arr = []
+        let arrLink = []
+
+        const s3 = new EasyYandexS3({
+            auth: {
+                accessKeyId: process.env.ACCESS_KEY_ID,
+                secretAccessKey: process.env.SECRET_ACCESS_KEY,
+            },
+            Bucket: process.env.BUCKET_NAME,
+            debug: true
+        })
+
+        for(let i = 0; i < files.length; i++){
+            arr.push({
+                buffer: files[i].buffer
+            })
+        }
+
+        const upload = await s3.Upload(arr , '/missdress')
+
+        for(let i = 0; i < upload.length; i++){
+            arrLink.push(upload[i].Location)
+        }
         
-        // let upload = await s3API.Upload({ buffer: file.buffer, name: file.originalname } , '/missdress')
-        
-        // dto.image = `http://yandex-s3/missdress/${file.originalname}`
-        dto.image = `http://yandex-s3/missdress/asd`
+        dto.image = arrLink
 
 
         return await this.ProductRepo.save(dto)
@@ -94,6 +106,42 @@ export class ProductService {
         return await this.ProductRepo.save(dto)
     }
 
+    async updateImages(id: number, files: Array<Express.Multer.File>){
+        const product = await this.findById(id)
+        if(!product){
+            throw new NotFoundException('Product is not found')
+        }
+
+        let EasyYandexS3 = require('easy-yandex-s3').default;
+        let arr = []
+        let arrLink = []
+
+        const s3 = new EasyYandexS3({
+            auth: {
+                accessKeyId: process.env.ACCESS_KEY_ID,
+                secretAccessKey: process.env.SECRET_ACCESS_KEY,
+            },
+            Bucket: process.env.BUCKET_NAME,
+            debug: true
+        })
+
+        for(let i = 0; i < files.length; i++){
+            arr.push({
+                buffer: files[i].buffer
+            })
+        }
+
+        const upload = await s3.Upload(arr , '/missdress')
+
+        for(let i = 0; i < upload.length; i++){
+            arrLink.push(upload[i].Location)
+        }
+        
+        product.image = arrLink
+
+        return await this.ProductRepo.save(product)
+    }
+
     async delete(id: number){
         const product = await this.findById(id)
 
@@ -116,5 +164,5 @@ export class ProductService {
     //     product.rating_count++
 
     //     return await this.ProductRepo.save(product)
-    // }
+    // 
 }

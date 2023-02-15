@@ -37,23 +37,19 @@ export class AuthService {
     res.send(saved)
   }
 
-    const code = await this.sendMessage(dto.phoneNumber, res);
+    async login(phoneNumber: string, res: Response) {
+        const user = await this.UserService.findByNumber(phoneNumber)
 
-    dto.code = code;
+        if(!user){
+            throw new NotFoundException('User is not found')
+        }
 
-  async login(phoneNumber: string, res: Response) {
-    const user = await this.UserService.findByNumber(phoneNumber)
+        const code = await this.sendMessage(phoneNumber, res)
+        user.code = code
 
-    if(!user){
-        throw new NotFoundException('User is not found')
+        const saved = await this.UserService.update(user)
+        res.send(saved)
     }
-
-    const code = await this.sendMessage(phoneNumber, res)
-    user.code = code
-
-    const saved = await this.UserService.update(user)
-    res.send(saved)
-  }
 
     private async sendMessage(phoneNumber: string, res: Response){
       const randomstring = require("randomstring")
@@ -82,13 +78,6 @@ export class AuthService {
 
       return code
     }
-
-    const code = await this.sendMessage(phoneNumber, res);
-    user.code = code;
-
-    const saved = await this.UserService.update(user);
-    res.send(saved);
-  }
   
   async validate(dto: ValidateDto){
     const user = await this.UserService.findById(dto.user_id)

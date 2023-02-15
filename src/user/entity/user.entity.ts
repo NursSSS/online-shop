@@ -1,24 +1,24 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { UserRole } from "../enum/role.enum";
-import { IUser } from "../interface/user.interface";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { UserRole } from '../enum/role.enum';
+import { IUser } from '../interface/user.interface';
 
 @Entity()
-export class UserEntity implements IUser{
-    @PrimaryGeneratedColumn()
-    id: number
+export class UserEntity implements IUser {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    firstName: string
+  @Column()
+  firstName: string;
 
-    @Column()
-    lastName: string
+  @Column()
+  lastName: string;
 
-    @Column({type: 'text'})
-    phoneNumber: string
+  @Column({ type: 'text' })
+  phoneNumber: string;
 
-    @Column()
-    code: number
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 
-    // @Column({ type: 'enum')
-    // role: UserRole
+  @Column()
+  code: number;
 }

@@ -1,118 +1,125 @@
 import { HttpService } from '@nestjs/axios/dist';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import axios from 'axios';
 import { Response } from 'express';
 import { CreateUserDto } from 'src/user/dto';
-import { UserService } from 'src/user/user.service'
+import { UserService } from 'src/user/user.service';
 import { GenerateToken, ValidateDto } from './dto';
 
-require('dotenv').config()
+require('dotenv').config();
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private UserService: UserService,
-        private JwtService: JwtService,
-        private HttpService: HttpService
-    ){}
+  constructor(
+    private UserService: UserService,
+    private JwtService: JwtService,
+    private HttpService: HttpService,
+  ) {}
 
-    async signin(dto: CreateUserDto, res: Response){
-        const user = await this.UserService.findByNumber(dto.phoneNumber)
+  async signin(dto: CreateUserDto, res: Response) {
+    const user = await this.UserService.findByNumber(dto.phoneNumber);
 
-        if(user){
-            throw new BadRequestException('User with this number already exist')
-        }
-
-
-        const code = await this.sendMessage(dto.phoneNumber, res)
-
-        // dto.code = code
-
-        return await this.UserService.create(dto)
+    if (user) {
+      throw new BadRequestException('User with this number already exists');
     }
 
-    async login(phoneNumber: string, res: Response){
-        const user = await this.UserService.findByNumber(phoneNumber)
+    const code = await this.sendMessage(dto.phoneNumber, res);
 
-        if(!user){
-            throw new NotFoundException('User is not found')
-        }
+    dto.code = code;
 
-        const code = await this.sendMessage(phoneNumber, res)
-        // user.code = code
+    const saved = await this.UserService.create(dto);
+    res.send(saved);
+  }
 
-        return await this.UserService.update(user)
+  async login(phoneNumber: string, res: Response) {
+    const user = await this.UserService.findByNumber(phoneNumber);
+
+    if (!user) {
+      throw new NotFoundException('User is not found');
     }
 
-    private async sendMessage(phoneNumber: string, res: Response){
-        const randomstring = require("randomstring")
-        const xml = require('xml')
+    const code = await this.sendMessage(phoneNumber, res);
+    user.code = code;
 
-        const code = await randomstring.generate({
-            length: 6,
-            charset: 'numeric'
-        })
-        const message = {
-            message: [
-                {login: 'nurik_kun'},
-                {pwd: 'hQ_Vrv55'},
-                {id: code},
-                {sender: 'MissDress'},
-                {text: `Your verification code is: ${code}`},
-                {phones: {
-                    phone: phoneNumber
-                }}
-            ]
-        }
+    const saved = await this.UserService.update(user);
+    res.send(saved);
+  }
 
-        const config = {
-            headers: {
-              'Content-Type': 'text/xml',
-            },
-          };
+  private async sendMessage(phoneNumber: string, res: Response) {
+    const randomstring = require('randomstring');
 
-        const body = xml(message)
-        console.log(body)
-        const response =  this.HttpService.post('http://smspro.nikita.kg/api/message', body, config)
-        console.log(response)
+    const code = await randomstring.generate({
+      length: 6,
+      charset: 'numeric',
+    });
 
-        return response
+    const config = {
+      headers: {
+        'Content-Type': 'text/xml',
+      },
+    };
+    const response = await axios.post(
+      'http://smspro.nikita.kg/api/message',
+      `<?xml version="1.0" encoding="UTF-8"?>
+        <message>
+        <login>kashiev</login>
+        <pwd>rChPOoiO</pwd>
+        <id>${code}</id>
+        <sender>SMSPRO.KG</sender>
+        <text>Your verification code is: ${code}</text>
+        <phones>
+        <phone>${phoneNumber}</phone>
+        </phones>
+        </message>`,
+      config,
+    );
+
+    return code;
+  }
+
+  async validate(dto: ValidateDto) {
+    const user = await this.UserService.findById(dto.user_id);
+
+    if (user.code !== dto.code) {
+      throw new BadRequestException('Wrong code');
     }
 
+    const dtoForToken = {
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      firstName: user.firstName,
+    };
 
-    async validate(dto: ValidateDto){
-        const user = await this.UserService.findById(dto.user_id)
+    return this.generateToken(dtoForToken);
+  }
 
-        if(user.code !== dto.code){
-            throw new BadRequestException('Wrong code')
-        }
+  private async generateToken(dto: GenerateToken) {
+    const payLoad = {
+      id: dto.id,
+      phoneNumber: dto.phoneNumber,
+      firstName: dto.firstName,
+    };
 
-        const dtoForToken = {
-            id: user.id,
-            phoneNumber: user.phoneNumber,
-            firstName: user.firstName
-        }
+    return { token: await this.JwtService.signAsync(payLoad) };
+  }
 
-        return this.generateToken(dtoForToken)
+  async changeNumber(number: string, res: Response) {
+    const user = await this.UserService.findByNumber(number);
+
+    if (user) {
+      throw new BadRequestException('User with this number already exist');
     }
 
-    private async generateToken(dto: GenerateToken){
-        const payLoad = { id: dto.id, phoneNumber: dto.phoneNumber, firstName: dto.firstName }
+    const code = await this.sendMessage(number, res);
 
-        return { token: await this.JwtService.signAsync(payLoad) }
-    }
+    user.code = code;
 
-    async changeNumber(number: string, res: Response){
-        const user = await this.UserService.findByNumber(number)
-
-        if(user){
-            throw new BadRequestException('User with this number already exist')
-        }
-
-        const code = await this.sendMessage(number, res)
-
-        // user.code = code
-
-        return await this.UserService.update(user)
-    }
+    const saved = await this.UserService.update(user);
+    res.send(saved);
+  }
 }

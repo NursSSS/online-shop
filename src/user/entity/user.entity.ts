@@ -1,11 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CartEntity } from 'src/cart/entity/cart.entity';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { UserRole } from '../enum/role.enum';
 import { IUser } from '../interface/user.interface';
 
-@Entity()
+@Entity('user')
 export class UserEntity implements IUser {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @OneToOne(() => CartEntity, (cart) => cart.user)
+  cart: CartEntity;
 
   @Column()
   firstName: string;

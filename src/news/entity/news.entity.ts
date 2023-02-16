@@ -1,5 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { AddNews } from '../dto/add-news.dto';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('news')
 export class NewsEntity {
@@ -15,9 +19,6 @@ export class NewsEntity {
   @Column()
   image: string;
 
-  @Column({
-    type: 'timestamptz',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  createDateTime: Date;
+  @CreateDateColumn()
+  create_date: Date;
 }

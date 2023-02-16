@@ -2,7 +2,6 @@ import { Controller, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { Delete, Get, Post, Put } from '@nestjs/common/decorators/http/request-mapping.decorator';
 import { Body, Param } from '@nestjs/common/decorators/http/route-params.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductService } from './product.service';
 
@@ -29,8 +28,7 @@ export class ProductController {
 
     @Post()
     @UseInterceptors(FilesInterceptor('files'))
-    async create(@Body('dto') dto, @UploadedFiles() files: Array<Express.Multer.File>){
-        dto = JSON.parse(dto)
+    async create(@Body() dto: CreateProductDto, @UploadedFiles() files: Array<Express.Multer.File>){
         return await this.ProductService.create(dto, files)
     }
 

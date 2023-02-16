@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { NewsEntity } from './entity/news.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddNews } from './dto/add-news.dto';
 import { Repository } from 'typeorm';
-import { DeleteNews } from './dto/delete-news.dto';
 
 @Injectable()
 export class NewsService {
@@ -20,10 +19,27 @@ export class NewsService {
     return await this.newsEntity.save(newsDto);
   }
 
-  async deleteNewByID(delNewsDto: DeleteNews): Promise<void> {
+  async deleteNewsById(id: string): Promise<any> {
     const news = await this.newsEntity.findOneBy({
-      id: delNewsDto.id,
+      id: +id,
     });
+
+    if (!news) {
+      throw new NotFoundException('Unable to delete not existing news');
+    }
     await this.newsEntity.remove(news);
+    return 'News with a given ID was removed';
+  }
+
+  async getNewsById(id: string): Promise<any> {
+    const news = await this.newsEntity.findOneBy({
+      id: +id,
+    });
+
+    if (!news) {
+      throw new NotFoundException('Requested news was not found');
+    }
+
+    return news;
   }
 }

@@ -37,7 +37,7 @@ export class RoleGuard implements CanActivate {
 
             return user.roles.some(role => reqRoles.includes(role.value))
         } catch (e){
-            throw new ForbiddenException('No acces')
+            throw new ForbiddenException('No access')
         }
     }
 }

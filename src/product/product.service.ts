@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException, UploadedFile } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { InjectRepository } from '@nestjs/typeorm';
+import { FavoriteEntity } from 'src/favorite/entity/favorite.entity';
+import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
+import { RatingService } from 'src/rating/rating.service';
+import { S3_CONFIG } from 'src/utils/es3.config';
 import { Repository } from 'typeorm';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductEntity } from './entity/product.entity.dto';
 import { ProductCategory, ProductCollection } from './enum';
-
+let EasyYandexS3 = require('easy-yandex-s3').default;
+const s3 = new EasyYandexS3(S3_CONFIG)
 
 
 
@@ -42,37 +47,12 @@ export class ProductService {
 
     async create(dto: CreateProductDto, files: Array<Express.Multer.File>){
         const product = await this.findByCode(dto.code)
-        
+
         if(product){
             throw new BadRequestException('Product with this atricul already exist')
         }
-
-        let EasyYandexS3 = require('easy-yandex-s3').default;
-        let arr = []
-        let arrLink = []
-
-        const s3 = new EasyYandexS3({
-            auth: {
-                accessKeyId: process.env.ACCESS_KEY_ID,
-                secretAccessKey: process.env.SECRET_ACCESS_KEY,
-            },
-            Bucket: process.env.BUCKET_NAME,
-            debug: true
-        })
-
-        for(let i = 0; i < files.length; i++){
-            arr.push({
-                buffer: files[i].buffer
-            })
-        }
-
-        const upload = await s3.Upload(arr , '/missdress')
-
-        for(let i = 0; i < upload.length; i++){
-            arrLink.push(upload[i].Location)
-        }
         
-        dto.image = arrLink
+        dto.image = await this.updateImages(files)
 
 
         return await this.ProductRepo.save(dto)
@@ -90,40 +70,28 @@ export class ProductService {
         return products
     }
 
-    async update(dto: UpdateProductDto){
-        const product = await this.findById(dto.id)
-
-        if(!product){
-            throw new NotFoundException('Product is not found')
-        }
-
+    async update(dto: UpdateProductDto, files: Array<Express.Multer.File>){
         const code = await this.findByCode(dto.code)
         if(code){
             throw new BadRequestException('Product with this atricul already exist')
         }
 
-        Object.assign(product, dto)
-        return await this.ProductRepo.save(dto)
-    }
+        const product = await this.findById(dto.id)
 
-    async updateImages(id: number, files: Array<Express.Multer.File>){
-        const product = await this.findById(id)
         if(!product){
             throw new NotFoundException('Product is not found')
         }
+        
+        dto.image = await this.updateImages(files)
 
-        let EasyYandexS3 = require('easy-yandex-s3').default;
+        Object.assign(product, dto)
+        return await this.ProductRepo.save(product)
+    }
+
+    async updateImages(files: Array<Express.Multer.File>){
+
         let arr = []
         let arrLink = []
-
-        const s3 = new EasyYandexS3({
-            auth: {
-                accessKeyId: process.env.ACCESS_KEY_ID,
-                secretAccessKey: process.env.SECRET_ACCESS_KEY,
-            },
-            Bucket: process.env.BUCKET_NAME,
-            debug: true
-        })
 
         for(let i = 0; i < files.length; i++){
             arr.push({
@@ -136,10 +104,8 @@ export class ProductService {
         for(let i = 0; i < upload.length; i++){
             arrLink.push(upload[i].Location)
         }
-        
-        product.image = arrLink
 
-        return await this.ProductRepo.save(product)
+        return arrLink
     }
 
     async delete(id: number){
@@ -153,16 +119,30 @@ export class ProductService {
         return { code: 200, message: 'User successfully deleted'}
     }
 
-    // async rating(dto: UpdateRatingDto){
-    //     const product = await this.findById(dto.product_id)
+    async updateRating(id: number, rating: number){
+        const product = await this.findById(id)
 
-    //     if(!product){
-    //         throw new NotFoundException('Product is not found')
-    //     }
+        if(!product){
+            throw new NotFoundException('Product is not found')
+        }
+        
+        product.rating = rating
 
-    //     product.rating_sum += dto.rating
-    //     product.rating_count++
+        await this.ProductRepo.save(product)
+        return product
+    }
 
-    //     return await this.ProductRepo.save(product)
-    // 
+    async findFavorites(products: FavoriteEntity[]){
+        const arr = []
+
+        for(let i = 0; i < products.length; i++){
+            arr.push({ id: products[i].product_id })
+        }
+
+        const product = await this.ProductRepo.find({
+            where: arr
+        })
+
+        return product
+    }
 }

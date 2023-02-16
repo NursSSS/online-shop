@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ProductCategory, ProductCollection, ProductColor } from '../enum';
 import { IProduct } from '../interface/product-interface.dto';
 
-@Entity()
+@Entity('product')
 export class ProductEntity implements IProduct {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,7 +22,7 @@ export class ProductEntity implements IProduct {
 
   @Column()
   quantity: number;
-
+    
   @Column()
   code: string;
 
@@ -32,8 +32,8 @@ export class ProductEntity implements IProduct {
   @Column('text', { array: true })
   image: string[];
 
-  @Column()
-  rating: number;
+  @Column('int', { default: 0 })
+  rating: number
 
   @Column({ type: 'enum', enum: ProductColor, array: true })
   color: ProductColor[];

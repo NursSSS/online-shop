@@ -7,8 +7,9 @@ import { NewsModule } from './news/news.module';
 import { ProductModule } from './product/product.module';
 import { RatingModule } from './rating/rating.module';
 import { CartModule } from './cart/cart.module';
+import { FavoriteModule } from './favorite/favorite.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(DB_CONFIG), AuthModule, UserModule, NewsModule, ProductModule, RatingModule, CartModule]
+  imports: [TypeOrmModule.forRoot(DB_CONFIG), AuthModule, UserModule, NewsModule, ProductModule, RatingModule, CartModule, FavoriteModule]
 })
 export class AppModule {}

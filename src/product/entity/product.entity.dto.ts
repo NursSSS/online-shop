@@ -6,42 +6,56 @@ import { IProduct } from '../interface/product-interface.dto';
 @Entity('product')
 export class ProductEntity implements IProduct {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
 
   @Column()
-  name: string;
+  name: string
 
   @Column()
-  price: number;
+  price: number
 
   @Column()
-  discount: number;
+  discount: number
 
   @Column()
-  description: string;
+  description: string
 
   @Column()
-  quantity: number;
+  quantity: number
     
   @Column()
-  code: string;
+  code: string
 
   @Column()
-  size: string;
+  size: string
+
+  @Column()
+  tkan: string
+
+  @Column()
+  fason: string
+
+  @Column()
+  length: number
+
+  @Column({ default: false })
+  is_hit: boolean
+
+  @Column({ default: false })
+  is_new: boolean
 
   @Column('text', { array: true })
-  image: string[];
+  image: string[]
 
   @Column('int', { default: 0 })
   rating: number
 
   @Column({ type: 'enum', enum: ProductColor, array: true })
-  color: ProductColor[];
+  color: ProductColor[]
 
   @Column({ type: 'enum', enum: ProductCollection })
-  collection: ProductCollection;
+  collection: ProductCollection
 
   @Column({ type: 'enum', enum: ProductCategory })
-  category: ProductCategory;
-
+  category: ProductCategory
 }

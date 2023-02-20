@@ -1,9 +1,4 @@
-import { HttpService } from '@nestjs/axios/dist';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import {  BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { Response } from 'express';
@@ -15,27 +10,27 @@ require('dotenv').config();
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private UserService: UserService,
-    private JwtService: JwtService,
-    private HttpService: HttpService,
-  ) {}
+    constructor(
+      private UserService: UserService,
+      private JwtService: JwtService
+    ) {}
 
-  async signin(dto: CreateUserDto, res: Response) {
-    const user = await this.UserService.findByNumber(dto.phoneNumber)
+    async signin(dto: CreateUserDto, res: Response) {
+      const user = await this.UserService.findByNumber(dto.phoneNumber)
 
-    if(user){
-        throw new BadRequestException('User with this number already exist')
+      if(user){
+          throw new BadRequestException('User with this number already exist')
+      }
+
+
+      const code = await this.sendMessage(dto.phoneNumber, res)
+      dto.code = code
+
+      const saved = await this.UserService.create(dto)
+      delete saved.code
+
+      res.send(saved)
     }
-
-
-    const code = await this.sendMessage(dto.phoneNumber, res)
-
-    dto.code = code
-
-    const saved = await this.UserService.create(dto)
-    res.send(saved)
-  }
 
     async login(phoneNumber: string, res: Response) {
         const user = await this.UserService.findByNumber(phoneNumber)
@@ -89,7 +84,8 @@ export class AuthService {
     const dtoForToken = {
         id: user.id,
         phoneNumber: user.phoneNumber,
-        firstName: user.firstName
+        firstName: user.firstName,
+        role: user.role
     }
 
     return this.generateToken(dtoForToken)
@@ -101,9 +97,10 @@ export class AuthService {
       id: dto.id,
       phoneNumber: dto.phoneNumber,
       firstName: dto.firstName,
+      role: dto.role
     };
 
-    return { token: await this.JwtService.signAsync(payLoad) };
+    return { token: await this.JwtService.sign(payLoad) };
   }
 
   async changeNumber(number: string, res: Response){

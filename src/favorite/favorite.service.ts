@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductService } from 'src/product/product.service';
 import { UserService } from 'src/user/user.service';
@@ -27,10 +27,20 @@ export class FavoriteService {
             throw new NotFoundException('User is not found')
         }
 
+        const favorite = await this.FavoriteRepo.findOne({
+            where: {
+                user_id: dto.user_id,
+                product_id: dto.product_id
+            }
+        })
+
+        if(favorite){
+            throw new BadRequestException('Product already in favorite')
+        }
+
         dto.created_date = new Date()
         dto.end_date = new Date(dto.created_date)
         dto.end_date.setDate(dto.created_date.getDate() + 3)
-        console.log(dto)
 
         return await this.FavoriteRepo.save(dto)
     }
@@ -42,7 +52,7 @@ export class FavoriteService {
 
         favorites.filter(i => i.end_date < today)
 
-        return await this.ProductService.findFavorites(favorites)
+        return await this.ProductService.findProducts(favorites)
     }
 
     async delete(dto: CreateFavoriteDto){

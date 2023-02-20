@@ -18,8 +18,8 @@ export class UserService {
   async findByNumber(phoneNumber: string) {
     const user = await this.userRepo.findOne({
       where: {
-        phoneNumber: phoneNumber,
-      },
+          phoneNumber
+      }
     });
 
     return user;

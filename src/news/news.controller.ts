@@ -12,16 +12,18 @@ import {
 import { NewsService } from './news.service';
 import { AddNews } from './dto/add-news.dto';
 import { RoleGuard } from 'src/auth/guard/role-guard';
-import { Role } from 'src/user/enum/role-decorator';
+import { Roles } from 'src/user/enum/role-decorator';
 import { UserRole } from 'src/user/enum/role.enum';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @Controller('news')
 export class NewsController {
   constructor(private newsService: NewsService) {}
 
-  // @Role(UserRole.ADMIN)
-  // @UseGuards(RoleGuard)
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getNews() {
     return await this.newsService.getNews();
@@ -46,7 +48,7 @@ export class NewsController {
     return this.newsService.deleteNewsById(id);
   }
 
-  @Role(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.USER)
   @UseGuards(RoleGuard)
   @Get(':id')
   async getNewsById(@Param('id') id: string) {

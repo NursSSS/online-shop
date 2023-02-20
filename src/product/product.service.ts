@@ -1,11 +1,8 @@
 import { Injectable, NotFoundException, UploadedFile } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FavoriteEntity } from 'src/favorite/entity/favorite.entity';
-import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
-import { RatingService } from 'src/rating/rating.service';
 import { S3_CONFIG } from 'src/utils/es3.config';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductEntity } from './entity/product.entity.dto';
 import { ProductCategory, ProductCollection } from './enum';
@@ -52,8 +49,11 @@ export class ProductService {
             throw new BadRequestException('Product with this atricul already exist')
         }
         
-        dto.image = await this.updateImages(files)
-
+        if(files.length === 0){
+            dto.image = []
+        } else {
+            dto.image = await this.updateImages(files)
+        }
 
         return await this.ProductRepo.save(dto)
     }
@@ -82,14 +82,16 @@ export class ProductService {
             throw new NotFoundException('Product is not found')
         }
         
-        dto.image = await this.updateImages(files)
+        
+        if(files.length !== 0){
+            dto.image = await this.updateImages(files)
+        }
 
         Object.assign(product, dto)
         return await this.ProductRepo.save(product)
     }
 
     async updateImages(files: Array<Express.Multer.File>){
-
         let arr = []
         let arrLink = []
 
@@ -132,15 +134,15 @@ export class ProductService {
         return product
     }
 
-    async findFavorites(products: FavoriteEntity[]){
+    async findProducts(products){
         const arr = []
 
         for(let i = 0; i < products.length; i++){
-            arr.push({ id: products[i].product_id })
+            arr.push(products[i].product_id)
         }
 
-        const product = await this.ProductRepo.find({
-            where: arr
+        const product = await this.ProductRepo.findBy({
+            id: In(arr)
         })
 
         return product

@@ -3,6 +3,7 @@ import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Observable } from "rxjs";
 import { ROLES_KEY } from "src/user/enum/role-decorator";
+import { setFlagsFromString } from "v8";
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -26,7 +27,7 @@ export class RoleGuard implements CanActivate {
             const authHead = req.headers.authorization; 
             const bearer = authHead.split(' ')[0]
             const token = authHead.split(' ')[1]
-
+            
 
             if(bearer !== 'Bearer' || !token){
                 throw new UnauthorizedException('User is not registered')
@@ -34,10 +35,16 @@ export class RoleGuard implements CanActivate {
 
             const user = this.JwtService.verify(token)
             req.user = user
-
-            return user.roles.some(role => reqRoles.includes(role.value))
+            const result = reqRoles.some(roles => roles === user.role)
+            if(result){
+                return true
+            } else {
+                throw new ForbiddenException('No access')
+            }
         } catch (e){
+            
             throw new ForbiddenException('No access')
+
         }
     }
 }

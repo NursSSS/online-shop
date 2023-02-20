@@ -28,7 +28,8 @@ export class ProductController {
 
     @Post()
     @UseInterceptors(FilesInterceptor('files'))
-    async create(@Body() dto: CreateProductDto, @UploadedFiles() files: Array<Express.Multer.File>){
+    async create(@Body('dto') dto, @UploadedFiles() files: Array<Express.Multer.File>){
+        dto = JSON.parse(dto)
         return await this.ProductService.create(dto, files)
     }
 

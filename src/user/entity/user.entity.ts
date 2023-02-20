@@ -20,7 +20,7 @@ export class UserEntity implements IUser {
   @Column({ type: 'text' })
   phoneNumber: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.ADMIN })
   role: UserRole;
 
   @Column()

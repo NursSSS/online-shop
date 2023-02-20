@@ -15,20 +15,21 @@ import { RoleGuard } from 'src/auth/guard/role-guard';
 import { Role } from 'src/user/enum/role-decorator';
 import { UserRole } from 'src/user/enum/role.enum';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @Controller('news')
 export class NewsController {
   constructor(private newsService: NewsService) {}
 
-  // @Role(UserRole.ADMIN)
-  // @UseGuards(RoleGuard)
+  @Role(UserRole.ADMIN)
+  @UseGuards(RoleGuard)
   @Get()
   async getNews() {
     return await this.newsService.getNews();
   }
 
-  // @Role(UserRole.ADMIN)
-  // @UseGuards(RoleGuard)
+  @Role(UserRole.ADMIN)
+  @UseGuards(RoleGuard, JwtAuthGuard)
   @Post('add')
   @UseInterceptors(FilesInterceptor('files'))
   async addNews(
@@ -39,8 +40,8 @@ export class NewsController {
     return await this.newsService.addNews(newsDto, files);
   }
 
-  // @Role(UserRole.ADMIN)
-  // @UseGuards(RoleGuard)
+  @Role(UserRole.ADMIN)
+  @UseGuards(RoleGuard)
   @Delete('delete/:id')
   async deleteNews(@Param('id') id: string) {
     return this.newsService.deleteNewsById(id);

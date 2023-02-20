@@ -8,18 +8,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AddNews } from './dto/add-news.dto';
 import { Repository } from 'typeorm';
 import { S3_CONFIG } from 'src/utils/s3.config';
+import { ProductService } from 'src/product/product.service';
 let EasyYandexS3 = require('easy-yandex-s3').default;
 const s3 = new EasyYandexS3(S3_CONFIG);
-
 
 @Injectable()
 export class NewsService {
   constructor(
     @InjectRepository(NewsEntity)
     private newsEntity: Repository<NewsEntity>,
+    private productService: ProductService,
   ) {}
 
   async getNews(): Promise<NewsEntity[]> {
+    console.log(ProductService);
     return await this.newsEntity.find();
   }
 
@@ -30,22 +32,7 @@ export class NewsService {
       throw new BadRequestException('News with this title already exists');
     }
 
-    let arr = [];
-    let arrLink = [];
-
-    for (let i = 0; i < files.length; i++) {
-      arr.push({
-        buffer: files[i].buffer,
-      });
-    }
-
-    const upload = await s3.Upload(arr, '/missdress/news');
-
-    for (let i = 0; i < upload.length; i++) {
-      arrLink.push(upload[i].Location);
-    }
-
-    dto.image = arrLink;
+    // dto.image = await this.productService.updateImages(files);
 
     return await this.newsEntity.save(dto);
   }

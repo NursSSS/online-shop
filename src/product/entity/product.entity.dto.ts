@@ -1,9 +1,16 @@
 import { CartEntity } from 'src/cart/entity/cart.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ProductCategory, ProductCollection, ProductColor } from '../enum';
 import { IProduct } from '../interface/product-interface.dto';
 
-@Entity()
+@Entity('product')
 export class ProductEntity implements IProduct {
   @PrimaryGeneratedColumn()
   id: number;
@@ -29,10 +36,25 @@ export class ProductEntity implements IProduct {
   @Column()
   size: string;
 
+  @Column()
+  tkan: string;
+
+  @Column()
+  fason: string;
+
+  @Column()
+  length: number;
+
+  @Column({ default: false })
+  is_hit: boolean;
+
+  @Column({ default: false })
+  is_new: boolean;
+
   @Column('text', { array: true })
   image: string[];
 
-  @Column()
+  @Column('int', { default: 0 })
   rating: number;
 
   @Column({ type: 'enum', enum: ProductColor, array: true })
@@ -44,4 +66,6 @@ export class ProductEntity implements IProduct {
   @Column({ type: 'enum', enum: ProductCategory })
   category: ProductCategory;
 
+  @OneToOne(() => CartEntity, (cart) => cart.product)
+  cart: CartEntity;
 }

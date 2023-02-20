@@ -1,4 +1,3 @@
-import { HttpService } from '@nestjs/axios/dist';
 import {
   BadRequestException,
   Injectable,
@@ -18,7 +17,6 @@ export class AuthService {
   constructor(
     private UserService: UserService,
     private JwtService: JwtService,
-    private HttpService: HttpService,
   ) {}
 
   async signin(dto: CreateUserDto, res: Response) {
@@ -93,6 +91,7 @@ export class AuthService {
       id: user.id,
       phoneNumber: user.phoneNumber,
       firstName: user.firstName,
+      role: user.role,
     };
 
     return this.generateToken(dtoForToken);
@@ -103,9 +102,10 @@ export class AuthService {
       id: dto.id,
       phoneNumber: dto.phoneNumber,
       firstName: dto.firstName,
+      role: dto.role,
     };
 
-    return { token: await this.JwtService.signAsync(payLoad) };
+    return { token: await this.JwtService.sign(payLoad) };
   }
 
   async changeNumber(number: string, res: Response) {

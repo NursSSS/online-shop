@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductModule } from 'src/product/product.module';
 import { UserModule } from 'src/user/user.module';
@@ -7,8 +7,9 @@ import { RatingController } from './rating.controller';
 import { RatingService } from './rating.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RatingEntity]), ProductModule, UserModule],
+  imports: [TypeOrmModule.forFeature([RatingEntity]), UserModule, ProductModule],
   controllers: [RatingController],
-  providers: [RatingService]
+  providers: [RatingService],
+  exports: [RatingService]
 })
 export class RatingModule {}

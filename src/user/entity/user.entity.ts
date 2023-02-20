@@ -1,5 +1,5 @@
 import { CartEntity } from 'src/cart/entity/cart.entity';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { UserRole } from '../enum/role.enum';
 import { IUser } from '../interface/user.interface';
 
@@ -7,10 +7,7 @@ import { IUser } from '../interface/user.interface';
 export class UserEntity implements IUser {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @OneToOne(() => CartEntity, (cart) => cart.user)
-  cart: CartEntity;
-
+  
   @Column()
   firstName: string;
 
@@ -25,4 +22,7 @@ export class UserEntity implements IUser {
 
   @Column()
   code: number;
+
+  @OneToOne(() => CartEntity, (cart) => cart.user)
+  cart: CartEntity
 }

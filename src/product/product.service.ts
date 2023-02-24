@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UploadedFile } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { InjectRepository } from '@nestjs/typeorm';
 import { S3_CONFIG } from 'src/utils/es3.config';
@@ -8,8 +8,6 @@ import { ProductEntity } from './entity/product.entity.dto';
 import { ProductCategory, ProductCollection } from './enum';
 let EasyYandexS3 = require('easy-yandex-s3').default;
 const s3 = new EasyYandexS3(S3_CONFIG)
-
-
 
 @Injectable()
 export class ProductService {
@@ -138,13 +136,36 @@ export class ProductService {
         const arr = []
 
         for(let i = 0; i < products.length; i++){
-            arr.push(products[i].product_id)
+            arr.push(products[i].product.id)
         }
 
         const product = await this.ProductRepo.findBy({
             id: In(arr)
         })
-
         return product
+    }
+
+    async updateStatistic(products: ProductEntity[]){
+        const stats = {
+            user_id: 0,
+            revenue: 0,
+            shopped: 0
+        }
+
+        for(let i = 0; i < products.length; i++){
+            const product = await this.findById(products[i].id)
+            const revenue = product.discount * products[i].quantityOfProduct
+            const quantity = products[i].quantityOfProduct
+            
+            product.sales += quantity
+            product.revenue += revenue
+            
+            stats.revenue += revenue
+            stats.shopped += quantity
+            
+            await this.ProductRepo.save(product)
+        }
+
+        return stats
     }
 }

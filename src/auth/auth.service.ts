@@ -31,6 +31,7 @@ export class AuthService {
     dto.code = code;
 
     const saved = await this.UserService.create(dto);
+    delete dto.code
     res.send(saved);
   }
 
@@ -65,8 +66,8 @@ export class AuthService {
       'http://smspro.nikita.kg/api/message',
       `<?xml version="1.0" encoding="UTF-8"?>
       <message>
-      <login>kashiev</login>
-      <pwd>rChPOoiO</pwd>
+      <login>${process.env.NIKITA_LOGIN}</login>
+      <pwd>${process.env.NIKITA_PASSWORD}</pwd>
       <id>${code}</id>
       <sender>SMSPRO.KG</sender>
       <text>Your verification code is: ${code}</text>
@@ -105,7 +106,7 @@ export class AuthService {
       role: dto.role,
     };
 
-    return { token: await this.JwtService.sign(payLoad) };
+    return { token: this.JwtService.sign(payLoad) };
   }
 
   async changeNumber(number: string, res: Response) {

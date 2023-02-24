@@ -1,11 +1,10 @@
-import { ProductsDto } from "../dto"
+import { ProductEntity } from "src/product/entity/product.entity.dto"
+import { UserEntity } from "src/user/entity/user.entity"
 
 export interface IOrder {
-    user_id: number
-    products: ProductsDto[]
-    phoneNumber: string
-    country: string
-    city: string
-    address: string
+    orderNumber: string
+    totalSum: number
+    user: UserEntity
+    products: ProductEntity[]
     date: Date
 }

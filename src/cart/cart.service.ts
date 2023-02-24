@@ -7,8 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ProductService } from 'src/product/product.service';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
-import { CreateCartDto } from './dto/create-cart.dto';
-import { DeleteCartDto } from './dto/delete-cart.dto';
+import { CreateCartDto, DeleteCartDto, UpdateCartDto } from './dto';
 import { CartEntity } from './entity/cart.entity';
 
 @Injectable()
@@ -25,15 +24,18 @@ export class CartService {
   }
 
   async findOne(user_id: number, product_id: number) {
-    const basket = await this.CartRepo.find({
-      where: { user: { id: user_id }, product: { id: product_id } },
-    });
+    const basket = await this.CartRepo.findOne({
+      where: {
+        user: { id: user_id }, 
+        product: { id: product_id }
+      }
+    })
 
     return basket;
   }
 
   async create(dto: CreateCartDto) {
-    const user = await this.UserService.findById(3);
+    const user = await this.UserService.findById(dto.user_id);
     const product = await this.ProductService.findById(dto.product_id);
     if (!product) {
       throw new NotFoundException('Product is not found');
@@ -44,12 +46,12 @@ export class CartService {
       throw new BadRequestException('Product already in basket');
     }
 
-    const test = await this.CartRepo.save({
-      quantity: dto.quantity,
-      color: dto.color,
-      user: user,
-      product: product,
-    });
+    dto.user = user
+    dto.product = product
+    delete dto.product_id
+    delete dto.user_id
+
+    await this.CartRepo.save(dto);
 
     return { message: 'Product successfully added to basket' };
   }
@@ -57,44 +59,67 @@ export class CartService {
   async findByUser(id: number) {
     const user = await this.UserService.findById(id);
     const basket = await this.CartRepo.find({
-      where: { user: { id: id } },
+      where: {
+        user: { id: id }
+      },
+      relations: {
+        product: true
+      }
     });
 
-    if (!basket) {
-      return { message: 'Basket is clear' };
+    if (!basket.length) {
+      throw new NotFoundException('Basket is clear')
     }
 
-    return basket;
+    const products = await this.ProductService.findProducts(basket)
+    products.map((el) => {
+      let product = basket.find((i) => i.product.id === el.id);
+      el.color = product.color;
+      el.quantityOfProduct = product.quantity;
+    });
 
-    // const products: any = await this.ProductService.findProducts(basket);
-    // products.map((el) => {
-    //   let product = basket.find((i) => i.product_id === el.id);
-    //   el.color = product.color;
-    //   el.quantityOfProduct = product.quantity;
-    // });
-    // return products;
+    return products;
   }
 
-  //   async update(dto: CreateCartDto) {
-  //     const basket = await this.findOne(dto.user_num, dto.product_id);
+  async update(dto: UpdateCartDto){
+    const basket = await this.findOne(dto.user_id, dto.product_id)
 
-  //     if (!basket) {
-  //       throw new NotFoundException('Product in basket is not found');
-  //     }
+    if(!basket){
+      throw new NotFoundException('Product in basket is not found')
+    }
 
-  //     Object.assign(basket, dto);
-  //     await this.CartRepo.save(basket);
-  //     return { message: `Quantity of product: ${basket.quantity}` };
-  //   }
+    Object.assign(basket, dto)
+    await this.CartRepo.save(basket)
+    return { message: 'Product successfully updated' }
+  }
 
-  //   async delete(dto: DeleteCartDto) {
-  //     const product = await this.findOne(dto.user_id, dto.product_id);
+  async delete(dto: DeleteCartDto) {
+    const product = await this.findOne(dto.user_id, dto.product_id);
 
-  //     if (!product) {
-  //       throw new NotFoundException('Product in basket is not found');
-  //     }
+    if (!product) {
+      throw new NotFoundException('Product in basket is not found');
+    }
 
-  //     await this.CartRepo.delete(product.id);
-  //     return { code: 200, message: 'Product successfully deleted' };
-  //   }
+    await this.CartRepo.remove(product);
+    return { code: 200, message: 'Product successfully deleted' };
+  }
+
+  async clearUserBasket(id: number){
+    const basket = await this.CartRepo.find({
+      where: {
+        user: { id: id }
+      },
+      relations: {
+        product: true
+      }
+    });
+    const arr = []
+
+    for(let i = 0; i < basket.length; i++){
+      arr.push(basket[i].id)
+    }
+
+    await this.CartRepo.delete(arr)
+    return { message: 'Product successfully deleted from basket' }
+  }
 }

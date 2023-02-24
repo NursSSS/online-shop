@@ -8,7 +8,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
-import { ROLES_KEY } from 'src/user/enum/role-decorator';
+import { Roles, ROLES_KEY } from 'src/user/enum/role-decorator';
+import { UserRole } from 'src/user/enum/role.enum';
 9
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -38,10 +39,15 @@ export class RoleGuard implements CanActivate {
         throw new UnauthorizedException('User is not registered');
       }
 
-      const user = this.JwtService.verify(token);
+      let user = this.JwtService.verify(token);
       req.user = user;
 
-      return user.roles.some((role) => reqRoles.includes(role.value));
+      if(user.role === UserRole.ADMIN){
+        return true
+      } else {
+        return false
+      }
+
     } catch (e) {
       throw new ForbiddenException('Access denied');
     }

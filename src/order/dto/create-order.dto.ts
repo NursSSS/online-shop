@@ -1,16 +1,17 @@
-import { OrderStatus } from "../enum/status.enum"
-import { ProductsDto } from "./products.dto"
+import { ApiProperty } from "@nestjs/swagger"
+import { IsNumber } from "class-validator"
+import { ProductEntity } from "src/product/entity/product.entity.dto"
+import { UserEntity } from "src/user/entity/user.entity"
 
 export class CreateOrderDto {
-    orderNumber: string
+    @ApiProperty({ example: 2 })
+    @IsNumber()
     user_id: number
-    products?: ProductsDto[]
+
+    @ApiProperty({ example: 17970 })
+    @IsNumber()
     totalSum: number
-    phoneNumber?: string
-    user_name?: string
-    country: string
-    city: string
-    address: string
-    date?: Date
-    status?: OrderStatus
+    products?: ProductEntity[]
+    user?: UserEntity
+    orderNumber?: string
 }

@@ -6,6 +6,6 @@ export enum ProductColor {
     RED = 'red',
     PINK = 'pink',
     GREEN = 'green',
-    YELLOW = 'Yyllow',
+    YELLOW = 'yellow',
     PURPLE = 'purple'
 }

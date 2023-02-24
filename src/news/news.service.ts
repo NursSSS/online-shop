@@ -21,7 +21,6 @@ export class NewsService {
   ) {}
 
   async getNews(): Promise<NewsEntity[]> {
-    console.log(ProductService);
     return await this.newsEntity.find();
   }
 
@@ -32,7 +31,7 @@ export class NewsService {
       throw new BadRequestException('News with this title already exists');
     }
 
-    // dto.image = await this.productService.updateImages(files);
+    dto.image = await this.productService.updateImages(files);
 
     return await this.newsEntity.save(dto);
   }
@@ -46,7 +45,7 @@ export class NewsService {
       throw new NotFoundException('Unable to delete not existing news');
     }
     await this.newsEntity.remove(news);
-    return 'News with a given ID was removed';
+    return {message: 'News with a given ID was removed'};
   }
 
   async getNewsById(id: string): Promise<any> {

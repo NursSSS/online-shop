@@ -33,10 +33,6 @@ export class RatingService {
     async create(dto: CreateRatingDto){
         const user = await this.UserService.findById(dto.user_id)
 
-        if(![1,2,3,4,5].includes(dto.rating)){
-            throw new BadRequestException('Rating must less than 5 and more than 1')
-        }
-
         const products = await this.findProductsById(dto.product_id)
         const rate = await this.RatingRepo.findOne({
             where: {

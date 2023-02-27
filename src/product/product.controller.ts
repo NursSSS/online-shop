@@ -2,10 +2,8 @@ import { Controller, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/c
 import { Delete, Get, Post, Put } from '@nestjs/common/decorators/http/request-mapping.decorator';
 import { Body, Param } from '@nestjs/common/decorators/http/route-params.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { RoleGuard } from 'src/auth/guard/role-guard';
-import { Roles } from 'src/user/enum/role-decorator';
-import { UserRole } from 'src/user/enum/role.enum';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductEntity } from './entity/product.entity.dto';
 import { ProductService } from './product.service';
@@ -41,12 +39,38 @@ export class ProductController {
     @ApiForbiddenResponse({ description: 'No access' })
     @ApiBadRequestResponse({ description: 'Validation error || Product with this atricul already exist' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiForbiddenResponse({ description: 'Acess denied' })
     @UseGuards(RoleGuard)
     @Post()
+    async create(@Body() dto: CreateProductDto){
+        return await this.ProductService.create(dto)
+    }
+
+    @ApiOkResponse({ type: ProductEntity })
+    @ApiNotFoundResponse({ description: 'Product is not found' })
+    @ApiForbiddenResponse({ description: 'No access' })
+    @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiForbiddenResponse({ description: 'Acess denied' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                files: {
+                    type: 'array',
+                    items: {
+                      type: 'string',
+                      format: 'binary',
+                    }
+                }
+            }
+        }
+    })
+    @UseGuards(RoleGuard)
+    @Put('/image/:id')
     @UseInterceptors(FilesInterceptor('files'))
-    async create(@Body('dto') dto, @UploadedFiles() files: Array<Express.Multer.File>){
-        dto = JSON.parse(dto)
-        return await this.ProductService.create(dto, files)
+    async uploadImages(@Param('id') id: number, @UploadedFiles() files: Array<Express.Multer.File>){
+        return await this.ProductService.updateImages(id, files)
     }
 
     @ApiOkResponse({ type: [ProductEntity] })
@@ -65,14 +89,18 @@ export class ProductController {
     @ApiNotFoundResponse({ description: 'Product is not found' })
     @ApiForbiddenResponse({ description: 'No access' })
     @ApiBadRequestResponse({ description: 'Validation error || Product with this atricul already exist' })
+    @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @UseGuards(RoleGuard)
     @Put()
-    @UseInterceptors(FilesInterceptor('files'))
-    async update(@Body() dto: UpdateProductDto, @UploadedFiles() files: Array<Express.Multer.File>){
-        return await this.ProductService.update(dto, files)
+    async update(@Body() dto: UpdateProductDto){
+        return await this.ProductService.update(dto)
     }
     
-    @ApiOkResponse({ description: 'User successfully deleted' })
+    @ApiOkResponse({ description: 'Product successfully deleted' })
     @ApiNotFoundResponse({ description: 'Product is not found' })
+    @ApiForbiddenResponse({ description: 'No access' })
+    @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @UseGuards(RoleGuard)
     @Delete(':id')
     async delete(@Param('id') id: number){
         return await this.ProductService.delete(id)

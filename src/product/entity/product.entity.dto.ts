@@ -74,7 +74,7 @@ export class ProductEntity implements IProduct {
   date: Date
 
   @ApiProperty()
-  @Column('text', { array: true })
+  @Column('text', { array: true, default: [] })
   image: string[];
 
   @ApiProperty()

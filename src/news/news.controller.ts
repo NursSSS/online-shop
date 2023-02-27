@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -15,7 +16,7 @@ import { RoleGuard } from 'src/auth/guard/role-guard';
 import { Roles } from 'src/user/enum/role-decorator';
 import { UserRole } from 'src/user/enum/role.enum';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { NewsEntity } from './entity/news.entity';
 
 @ApiTags('News')
@@ -39,13 +40,35 @@ export class NewsController {
   @Roles(UserRole.ADMIN)
   @UseGuards(RoleGuard)
   @Post('add')
+  async addNews(@Body() newsDto: AddNews) {
+    return await this.newsService.addNews(newsDto);
+  }
+
+  @ApiOkResponse({ type: NewsEntity })
+  @ApiNotFoundResponse({ description: 'Product is not found' })
+  @ApiForbiddenResponse({ description: 'No access' })
+  @ApiUnauthorizedResponse({ description: 'User is not registered' })
+  @ApiForbiddenResponse({ description: 'Acess denied' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+      schema: {
+          type: 'object',
+          properties: {
+              files: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                    format: 'binary',
+                  }
+              }
+          }
+      }
+  })
+  @UseGuards(RoleGuard)
+  @Put('/image/:id')
   @UseInterceptors(FilesInterceptor('files'))
-  async addNews(
-    @Body() newsDto: AddNews,
-    @UploadedFiles() files: Array<Express.Multer.File>,
-  ) {
-    // newsDto = JSON.parse(newsDto);
-    return await this.newsService.addNews(newsDto, files);
+  async uploadImages(@Param('id') id: number, @UploadedFiles() files: Array<Express.Multer.File>){
+      return await this.newsService.updateImages(id, files)
   }
 
   @ApiOkResponse({ description: 'News with a given ID was removed' })
@@ -54,14 +77,14 @@ export class NewsController {
   @ApiForbiddenResponse({ description: 'Access denied' })
   @UseGuards(RoleGuard)
   @Delete('delete/:id')
-  async deleteNews(@Param('id') id: string) {
+  async deleteNews(@Param('id') id: number) {
     return this.newsService.deleteNewsById(id);
   }
 
   @ApiOkResponse({ type: NewsEntity })
   @ApiNotFoundResponse({ description: 'Unable to delete not existing news' })
   @Get(':id')
-  async getNewsById(@Param('id') id: string) {
+  async getNewsById(@Param('id') id: number) {
     return this.newsService.getNewsById(id);
   }
 }

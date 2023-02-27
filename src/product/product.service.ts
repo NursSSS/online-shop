@@ -40,17 +40,11 @@ export class ProductService {
         return product
     }
 
-    async create(dto: CreateProductDto, files: Array<Express.Multer.File>){
+    async create(dto: CreateProductDto){
         const product = await this.findByCode(dto.code)
 
         if(product){
             throw new BadRequestException('Product with this atricul already exist')
-        }
-        
-        if(files.length === 0){
-            dto.image = []
-        } else {
-            dto.image = await this.updateImages(files)
         }
 
         return await this.ProductRepo.save(dto)
@@ -68,7 +62,7 @@ export class ProductService {
         return products
     }
 
-    async update(dto: UpdateProductDto, files: Array<Express.Multer.File>){
+    async update(dto: UpdateProductDto){
         const code = await this.findByCode(dto.code)
         if(code){
             throw new BadRequestException('Product with this atricul already exist')
@@ -79,19 +73,15 @@ export class ProductService {
         if(!product){
             throw new NotFoundException('Product is not found')
         }
-        
-        
-        if(files.length !== 0){
-            dto.image = await this.updateImages(files)
-        }
 
         Object.assign(product, dto)
         return await this.ProductRepo.save(product)
     }
 
-    async updateImages(files: Array<Express.Multer.File>){
-        let arr = []
-        let arrLink = []
+    async updateImages(id: number, files: Array<Express.Multer.File>){
+        const product = await this.findById(id)
+        const arr = []
+        const arrLink = []
 
         for(let i = 0; i < files.length; i++){
             arr.push({
@@ -105,7 +95,10 @@ export class ProductService {
             arrLink.push(upload[i].Location)
         }
 
-        return arrLink
+        product.image = arrLink
+
+        await this.ProductRepo.save(product)
+        return product
     }
 
     async delete(id: number){

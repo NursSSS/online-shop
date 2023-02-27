@@ -19,7 +19,7 @@ export class CreateProductDto {
 
     @ApiProperty({ example: 'Описание товара' })
     @IsString()
-    @Length(255)
+    @Length(1, 255)
     description: string
 
     @ApiProperty({ description: 'Кол-во товаров в линейке' })
@@ -34,17 +34,26 @@ export class CreateProductDto {
     @IsString()
     size: string
 
-    @ApiProperty()
-    image?: string[]
+    @ApiProperty({ example: 'Полиэстер' })
+    @IsString()
+    tkan: string
 
+    @ApiProperty({ example: 'А-Силуэт' })
+    @IsString()
+    fason: string
+
+    @ApiProperty({ example: 120 })
+    @IsNumber()
+    length: number
+    
     @ApiProperty({ example: ['red', 'black', 'white'] })
     @IsArray()
     @IsEnum(ProductColor, { each: true })
     color: ProductColor[]
-
+    
     @ApiProperty({ example: 'Зимний' })
     collection: ProductCollection
-
+    
     @ApiProperty({ example: 'Платья' })
     category: ProductCategory
 }

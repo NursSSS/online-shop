@@ -21,7 +21,7 @@ export class NewsEntity {
   description: string;
 
   @ApiProperty()
-  @Column('text', { array: true })
+  @Column('text', { array: true, default: [] })
   image: string[];
 
   @ApiProperty()

@@ -11,5 +11,4 @@ export class AddNews {
   @IsString()
   @Length(20, 255)
   description: string;
-  image?: string[];
 }

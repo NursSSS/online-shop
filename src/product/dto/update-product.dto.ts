@@ -38,8 +38,6 @@ export class UpdateProductDto {
     @IsString()
     size: string
 
-    image?: string[]
-
     @ApiProperty({ example: ['red', 'black', 'white'] })
     @IsArray()
     @IsEnum(ProductColor, { each: true })

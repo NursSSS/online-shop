@@ -1,5 +1,5 @@
 import { Controller, Get, Body, Post, UseGuards } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { ProductEntity } from 'src/product/entity/product.entity.dto';
 import { CreateRatingDto } from './dto/create-rating.dto';
@@ -21,6 +21,7 @@ export class RatingController {
     @ApiNotFoundResponse({ description: 'Not found' })
     @ApiBadRequestResponse({ description: 'User already gave vote || Validation error' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Post()
     async createRating(@Body() dto: CreateRatingDto){

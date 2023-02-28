@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
 import { UseGuards } from '@nestjs/common/decorators/core/use-guards.decorator';
-import { ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { RoleGuard } from 'src/auth/guard/role-guard';
 import { ContactsService } from './contacts.service';
 import { CreateContactDto, UpdateContactDto } from './dto';
@@ -22,6 +22,7 @@ export class ContactsController {
   @ApiCreatedResponse({ description: 'Contact successfully created' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
   @ApiForbiddenResponse({ description: 'Acess denied' })
+  @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @Post()
   create(@Body() dto: CreateContactDto) {
@@ -32,6 +33,7 @@ export class ContactsController {
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
   @ApiForbiddenResponse({ description: 'Acess denied' })
+  @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @Put()
   update(@Body() dto: UpdateContactDto) {
@@ -42,6 +44,7 @@ export class ContactsController {
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
   @ApiForbiddenResponse({ description: 'Acess denied' })
+  @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {

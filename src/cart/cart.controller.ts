@@ -1,7 +1,7 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { Body, Delete, Param, UseGuards } from '@nestjs/common/decorators';
 import { Put } from '@nestjs/common/decorators/http/request-mapping.decorator';
-import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { ProductEntity } from 'src/product/entity/product.entity.dto';
 import { CartService } from './cart.service';
@@ -21,15 +21,17 @@ export class CartController {
   @ApiBadRequestResponse({ description: 'Validation error || Product already in basket' })
   @ApiNotFoundResponse({ description: 'Product is not found || User is not found' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateCartDto) {
+  async create(@Body() dto: CreateCartDto): Promise<{ message: string; }> {
     return await this.CartService.create(dto)
   }
 
   @ApiOkResponse({ type: ProductEntity })
   @ApiNotFoundResponse({ description: 'User is not found || Basket is clear' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findByUser(@Param('id') id: number) {
@@ -39,6 +41,7 @@ export class CartController {
   @ApiOkResponse({ description: 'Product successfully updated' })
   @ApiNotFoundResponse({ description: 'Product in basket is not found' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Put()
   async update(@Body() dto: UpdateCartDto){
@@ -48,6 +51,7 @@ export class CartController {
   @ApiOkResponse({ description: 'Product successfully deleted' })
   @ApiNotFoundResponse({ description: 'Product in basket is not found' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Delete()
   async delete(@Body() dto: DeleteCartDto){

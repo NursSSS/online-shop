@@ -2,7 +2,7 @@ import { Controller, UseInterceptors, UploadedFiles, UseGuards } from '@nestjs/c
 import { Delete, Get, Post, Put } from '@nestjs/common/decorators/http/request-mapping.decorator';
 import { Body, Param } from '@nestjs/common/decorators/http/route-params.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiConsumes, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { RoleGuard } from 'src/auth/guard/role-guard';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductEntity } from './entity/product.entity.dto';
@@ -40,6 +40,7 @@ export class ProductController {
     @ApiBadRequestResponse({ description: 'Validation error || Product with this atricul already exist' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
     @ApiForbiddenResponse({ description: 'Acess denied' })
+    @ApiBearerAuth()
     @UseGuards(RoleGuard)
     @Post()
     async create(@Body() dto: CreateProductDto){
@@ -66,6 +67,7 @@ export class ProductController {
             }
         }
     })
+    @ApiBearerAuth()
     @UseGuards(RoleGuard)
     @Put('/image/:id')
     @UseInterceptors(FilesInterceptor('files'))
@@ -90,6 +92,7 @@ export class ProductController {
     @ApiForbiddenResponse({ description: 'No access' })
     @ApiBadRequestResponse({ description: 'Validation error || Product with this atricul already exist' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiBearerAuth()
     @UseGuards(RoleGuard)
     @Put()
     async update(@Body() dto: UpdateProductDto){
@@ -100,6 +103,7 @@ export class ProductController {
     @ApiNotFoundResponse({ description: 'Product is not found' })
     @ApiForbiddenResponse({ description: 'No access' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiBearerAuth()
     @UseGuards(RoleGuard)
     @Delete(':id')
     async delete(@Param('id') id: number){

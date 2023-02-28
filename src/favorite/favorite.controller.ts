@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { UseGuards } from '@nestjs/common/decorators';
-import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { ProductEntity } from 'src/product/entity/product.entity.dto';
 import { CreateFavoriteDto } from './dto/create-favorite.dto';
@@ -22,15 +22,17 @@ export class FavoriteController {
     @ApiNotFoundResponse({ description: 'Product is not found || User is not found' })
     @ApiBadRequestResponse({ description: 'Product already in favorite || Validation error' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Post()
-    async create(@Body() dto: CreateFavoriteDto){
+    async create(@Body() dto: CreateFavoriteDto): Promise<{ message: string; }>{
         return await this.FavoriteService.create(dto)
     }
 
     @ApiOkResponse({ type: ProductEntity })
     @ApiNotFoundResponse({ description: 'User is not found || Basket is clear' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get(':id')
     async findByUser(@Param('id') id: number){
@@ -41,6 +43,7 @@ export class FavoriteController {
     @ApiNotFoundResponse({ description: 'Favorite is not found' })
     @ApiUnauthorizedResponse({ description: 'User is not registered' })
     @ApiBadRequestResponse({ description: 'Validation error' })
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Delete()
     async delete(@Body() dto: CreateFavoriteDto){

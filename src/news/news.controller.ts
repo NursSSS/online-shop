@@ -16,7 +16,7 @@ import { RoleGuard } from 'src/auth/guard/role-guard';
 import { Roles } from 'src/user/enum/role-decorator';
 import { UserRole } from 'src/user/enum/role.enum';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiBody, ApiConsumes, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiConsumes, ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { NewsEntity } from './entity/news.entity';
 
 @ApiTags('News')
@@ -25,9 +25,6 @@ export class NewsController {
   constructor(private newsService: NewsService) {}
 
   @ApiOkResponse({ type: NewsEntity })
-  @ApiUnauthorizedResponse({ description: 'User is not registered' })
-  @ApiForbiddenResponse({ description: 'Access denied' })
-  @UseGuards(RoleGuard)
   @Get()
   async getNews() {
     return await this.newsService.getNews();
@@ -37,6 +34,7 @@ export class NewsController {
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
   @ApiForbiddenResponse({ description: 'Access denied' })
   @ApiBadRequestResponse({ description: 'Validation error || News with this title already exists' })
+  @ApiBearerAuth()
   @Roles(UserRole.ADMIN)
   @UseGuards(RoleGuard)
   @Post('add')
@@ -64,6 +62,7 @@ export class NewsController {
           }
       }
   })
+  @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @Put('/image/:id')
   @UseInterceptors(FilesInterceptor('files'))
@@ -75,6 +74,7 @@ export class NewsController {
   @ApiNotFoundResponse({ description: 'Unable to delete not existing news' })
   @ApiUnauthorizedResponse({ description: 'User is not registered' })
   @ApiForbiddenResponse({ description: 'Access denied' })
+  @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @Delete('delete/:id')
   async deleteNews(@Param('id') id: number) {
@@ -82,7 +82,7 @@ export class NewsController {
   }
 
   @ApiOkResponse({ type: NewsEntity })
-  @ApiNotFoundResponse({ description: 'Unable to delete not existing news' })
+  @ApiNotFoundResponse({ description: 'News is not found' })
   @Get(':id')
   async getNewsById(@Param('id') id: number) {
     return this.newsService.getNewsById(id);

@@ -112,12 +112,14 @@ export class AuthService {
   async changeNumber(number: string, res: Response) {
     const user = await this.UserService.findByNumber(number);
 
-    if (user) {
-      throw new BadRequestException('User with this number already exist');
+    if (!user) {
+      throw new NotFoundException('User is not found');
     }
 
     const code = await this.sendMessage(number, res);
+    console.log(code)
 
+    console.log(user)
     user.code = code;
 
     const saved = await this.UserService.update(user);

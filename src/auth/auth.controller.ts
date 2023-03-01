@@ -43,7 +43,7 @@ export class AuthController {
     @ApiOkResponse({ type: UserEntity })
     @ApiBadRequestResponse({ description: 'User with this number already exist || Wrong number' })
     @ApiNotFoundResponse({ description: 'User is not found' })
-    async changeNumber(@Param() number: string, @Res() res: Response){
+    async changeNumber(@Param('number') number: string, @Res() res: Response){
         return await this.AuthService.changeNumber(number, res)
     }
 }

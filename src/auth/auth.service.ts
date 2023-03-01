@@ -117,9 +117,6 @@ export class AuthService {
     }
 
     const code = await this.sendMessage(number, res);
-    console.log(code)
-
-    console.log(user)
     user.code = code;
 
     const saved = await this.UserService.update(user);

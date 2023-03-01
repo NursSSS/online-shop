@@ -1,4 +1,3 @@
-import { HttpService } from '@nestjs/axios/dist';
 import {
   BadRequestException,
   Injectable,
@@ -18,106 +17,109 @@ export class AuthService {
   constructor(
     private UserService: UserService,
     private JwtService: JwtService,
-    private HttpService: HttpService,
   ) {}
 
   async signin(dto: CreateUserDto, res: Response) {
-    const user = await this.UserService.findByNumber(dto.phoneNumber)
+    const user = await this.UserService.findByNumber(dto.phoneNumber);
 
-    if(user){
-        throw new BadRequestException('User with this number already exist')
+    if (user) {
+      throw new BadRequestException('User with this number already exist');
     }
 
+    const code = await this.sendMessage(dto.phoneNumber, res);
 
-    const code = await this.sendMessage(dto.phoneNumber, res)
+    dto.code = code;
 
-    dto.code = code
-
-    const saved = await this.UserService.create(dto)
-    res.send(saved)
+    const saved = await this.UserService.create(dto);
+    delete dto.code
+    res.send(saved);
   }
 
-    async login(phoneNumber: string, res: Response) {
-        const user = await this.UserService.findByNumber(phoneNumber)
+  async login(phoneNumber: string, res: Response) {
+    const user = await this.UserService.findByNumber(phoneNumber);
 
-        if(!user){
-            throw new NotFoundException('User is not found')
-        }
-
-        const code = await this.sendMessage(phoneNumber, res)
-        user.code = code
-
-        const saved = await this.UserService.update(user)
-        res.send(saved)
+    if (!user) {
+      throw new NotFoundException('User is not found');
     }
 
-    private async sendMessage(phoneNumber: string, res: Response){
-      const randomstring = require("randomstring")
+    const code = await this.sendMessage(phoneNumber, res);
+    user.code = code;
 
-      const code = await randomstring.generate({
-          length: 6,
-          charset: 'numeric'
-      })
+    const saved = await this.UserService.update(user);
+    res.send(saved);
+  }
 
-      const config = {
-          headers: {
-            'Content-Type': 'text/xml',
-          },
-        };
-      const response = await axios.post('http://smspro.nikita.kg/api/message', `<?xml version="1.0" encoding="UTF-8"?>
+  private async sendMessage(phoneNumber: string, res: Response) {
+    const randomstring = require('randomstring');
+
+    const code = await randomstring.generate({
+      length: 6,
+      charset: 'numeric',
+    });
+
+    const config = {
+      headers: {
+        'Content-Type': 'text/xml',
+      },
+    };
+    const response = await axios.post(
+      'http://smspro.nikita.kg/api/message',
+      `<?xml version="1.0" encoding="UTF-8"?>
       <message>
-      <login>nurik_kun</login>
-      <pwd>hQ_Vrv55</pwd>
+      <login>${process.env.NIKITA_LOGIN}</login>
+      <pwd>${process.env.NIKITA_PASSWORD}</pwd>
       <id>${code}</id>
       <sender>SMSPRO.KG</sender>
       <text>Your verification code is: ${code}</text>
       <phones>
       <phone>${phoneNumber}</phone>
       </phones>
-      </message>`, config)
+      </message>`,
+      config,
+    );
 
-      return code
-    }
-  
-  async validate(dto: ValidateDto){
-    const user = await this.UserService.findById(dto.user_id)
+    return code;
+  }
 
-    if(user.code !== dto.code){
-        throw new BadRequestException('Wrong code')
+  async validate(dto: ValidateDto) {
+    const user = await this.UserService.findById(dto.user_id);
+
+    if (user.code !== dto.code) {
+      throw new BadRequestException('Wrong code');
     }
 
     const dtoForToken = {
-        id: user.id,
-        phoneNumber: user.phoneNumber,
-        firstName: user.firstName
-    }
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      firstName: user.firstName,
+      role: user.role,
+    };
 
-    return this.generateToken(dtoForToken)
+    return this.generateToken(dtoForToken);
   }
-
 
   private async generateToken(dto: GenerateToken) {
     const payLoad = {
       id: dto.id,
       phoneNumber: dto.phoneNumber,
       firstName: dto.firstName,
+      role: dto.role,
     };
 
-    return { token: await this.JwtService.signAsync(payLoad) };
+    return { token: this.JwtService.sign(payLoad) };
   }
 
-  async changeNumber(number: string, res: Response){
-    const user = await this.UserService.findByNumber(number)
+  async changeNumber(number: string, res: Response) {
+    const user = await this.UserService.findByNumber(number);
 
-    if(user){
-        throw new BadRequestException('User with this number already exist')
+    if (!user) {
+      throw new NotFoundException('User is not found');
     }
 
-    const code = await this.sendMessage(number, res)
+    const code = await this.sendMessage(number, res);
+    user.code = code;
 
-    user.code = code
-
-    const saved = await this.UserService.update(user)
-    res.send(saved)
+    const saved = await this.UserService.update(user);
+    res.send(saved);
   }
 }

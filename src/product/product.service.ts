@@ -1,18 +1,13 @@
-import { Injectable, NotFoundException, UploadedFile } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions/bad-request.exception';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FavoriteEntity } from 'src/favorite/entity/favorite.entity';
-import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
-import { RatingService } from 'src/rating/rating.service';
 import { S3_CONFIG } from 'src/utils/es3.config';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductEntity } from './entity/product.entity.dto';
 import { ProductCategory, ProductCollection } from './enum';
 let EasyYandexS3 = require('easy-yandex-s3').default;
 const s3 = new EasyYandexS3(S3_CONFIG)
-
-
 
 @Injectable()
 export class ProductService {
@@ -45,15 +40,12 @@ export class ProductService {
         return product
     }
 
-    async create(dto: CreateProductDto, files: Array<Express.Multer.File>){
+    async create(dto: CreateProductDto){
         const product = await this.findByCode(dto.code)
 
         if(product){
             throw new BadRequestException('Product with this atricul already exist')
         }
-        
-        dto.image = await this.updateImages(files)
-
 
         return await this.ProductRepo.save(dto)
     }
@@ -70,7 +62,7 @@ export class ProductService {
         return products
     }
 
-    async update(dto: UpdateProductDto, files: Array<Express.Multer.File>){
+    async update(dto: UpdateProductDto){
         const code = await this.findByCode(dto.code)
         if(code){
             throw new BadRequestException('Product with this atricul already exist')
@@ -81,17 +73,15 @@ export class ProductService {
         if(!product){
             throw new NotFoundException('Product is not found')
         }
-        
-        dto.image = await this.updateImages(files)
 
         Object.assign(product, dto)
         return await this.ProductRepo.save(product)
     }
 
-    async updateImages(files: Array<Express.Multer.File>){
-
-        let arr = []
-        let arrLink = []
+    async updateImages(id: number, files: Array<Express.Multer.File>){
+        const product = await this.findById(id)
+        const arr = []
+        const arrLink = []
 
         for(let i = 0; i < files.length; i++){
             arr.push({
@@ -105,7 +95,10 @@ export class ProductService {
             arrLink.push(upload[i].Location)
         }
 
-        return arrLink
+        product.image = arrLink
+
+        await this.ProductRepo.save(product)
+        return product
     }
 
     async delete(id: number){
@@ -132,17 +125,40 @@ export class ProductService {
         return product
     }
 
-    async findFavorites(products: FavoriteEntity[]){
+    async findProducts(products){
         const arr = []
 
         for(let i = 0; i < products.length; i++){
-            arr.push({ id: products[i].product_id })
+            arr.push(products[i].product.id)
         }
 
-        const product = await this.ProductRepo.find({
-            where: arr
+        const product = await this.ProductRepo.findBy({
+            id: In(arr)
         })
-
         return product
+    }
+
+    async updateStatistic(products: ProductEntity[]){
+        const stats = {
+            user_id: 0,
+            revenue: 0,
+            shopped: 0
+        }
+
+        for(let i = 0; i < products.length; i++){
+            const product = await this.findById(products[i].id)
+            const revenue = product.discount * products[i].quantityOfProduct
+            const quantity = products[i].quantityOfProduct
+            
+            product.sales += quantity
+            product.revenue += revenue
+            
+            stats.revenue += revenue
+            stats.shopped += quantity
+            
+            await this.ProductRepo.save(product)
+        }
+
+        return stats
     }
 }

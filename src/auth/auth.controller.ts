@@ -18,8 +18,7 @@ export class AuthController {
 
     @Post('signin')
     @ApiOkResponse({ type: UserEntity })
-    @ApiBadRequestResponse({ description: 'User with this number already exist' })
-    @ApiBadRequestResponse({ description: 'Wrong number' })
+    @ApiBadRequestResponse({ description: 'User with this number already exist || Wrong number || Validation error' })
     async signin(@Body() dto: CreateUserDto, @Res() res: Response){
         return await this.AuthService.signin(dto, res)
     }
@@ -33,19 +32,18 @@ export class AuthController {
     }
 
     @Post('validate')
-    @ApiOkResponse({ type: 'JwtToken'})
+    @ApiOkResponse({ description: 'JwtToken'})
     @ApiNotFoundResponse({ description: 'User is not found' })
-    @ApiBadRequestResponse({ description: 'Wrong code' })
+    @ApiBadRequestResponse({ description: 'Wrong code || Validation error' })
     async validate(@Body() dto: ValidateDto){
         return await this.AuthService.validate(dto)
     }
 
     @Post('change/:number')
     @ApiOkResponse({ type: UserEntity })
-    @ApiBadRequestResponse({ description: 'User with this number already exist' })
-    @ApiBadRequestResponse({ description: 'Wrong number' })
+    @ApiBadRequestResponse({ description: 'User with this number already exist || Wrong number' })
     @ApiNotFoundResponse({ description: 'User is not found' })
-    async changeNumber(@Param() number: string, @Res() res: Response){
+    async changeNumber(@Param('number') number: string, @Res() res: Response){
         return await this.AuthService.changeNumber(number, res)
     }
 }

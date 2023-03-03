@@ -63,9 +63,11 @@ export class ProductService {
     }
 
     async update(dto: UpdateProductDto){
-        const code = await this.findByCode(dto.code)
-        if(code){
-            throw new BadRequestException('Product with this atricul already exist')
+        if(dto.hasOwnProperty('code')){
+            const code = await this.findByCode(dto.code)
+            if(code){
+                throw new BadRequestException('Product with this atricul already exist')
+            }
         }
 
         const product = await this.findById(dto.id)

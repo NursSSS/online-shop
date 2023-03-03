@@ -21,6 +21,7 @@ export class UserEntity implements IUser {
   @Column()
   lastName: string;
 
+  @ApiProperty()
   @Column({ type: 'text' })
   phoneNumber: string;
 

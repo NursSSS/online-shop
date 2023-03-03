@@ -8,28 +8,32 @@ export class UpdateUserDto {
   id: number;
 
   @ApiProperty({ example: 'Beks' })
-  @Length(3, 14)
+  @IsString()
+  @IsOptional()
   firstName: string;
 
   @ApiProperty({ example: 'Beksov' })
-  @Length(3, 14)
+  @IsString()
+  @IsOptional()
   lastName: string;
 
   @ApiProperty({ example: 'Кыргызстан' })
+  @IsOptional()
   @IsString()
-  @Max(15)
   country: string
 
   @ApiProperty({ example: 'Бишкек' })
+  @IsOptional()
   @IsString()
-  @Max(15)
   city: string
 
   @ApiProperty({ example: 'Исанова 79' })
+  @IsOptional()
   @IsString()
   address: string
 
   @ApiProperty({ example: 'В ожидании' })
+  @IsOptional()
   status: Status
 
   @IsOptional()

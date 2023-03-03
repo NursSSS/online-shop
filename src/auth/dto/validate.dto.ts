@@ -8,6 +8,5 @@ export class ValidateDto {
 
     @ApiProperty({ example: 123456 })
     @IsNumber()
-    @Length(6,6)
     code: number
 }

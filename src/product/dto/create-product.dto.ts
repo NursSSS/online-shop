@@ -52,8 +52,10 @@ export class CreateProductDto {
     color: ProductColor[]
     
     @ApiProperty({ example: 'Зимний' })
+    @IsEnum(ProductCollection)
     collection: ProductCollection
     
     @ApiProperty({ example: 'Платья' })
+    @IsEnum(ProductCategory)
     category: ProductCategory
 }

@@ -89,6 +89,7 @@ export class CartService {
     }
 
     Object.assign(basket, dto)
+    
     await this.CartRepo.save(basket)
     return { message: 'Product successfully updated' }
   }
